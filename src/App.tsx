@@ -68,54 +68,51 @@ function App() {
     setStartGame(!startGame);
   };
 
-  const onKeyUp = useCallback(
-    (event: KeyboardEvent) => {
-      if (inputRef.current) {
-        const currentWord = words[currentWordIndex];
-        inputRef.current.maxLength = currentWord.length;
-        const value = inputRef.current ? inputRef.current.value.trim() : "";
-        setInputValue(value);
+  const onKeyUp = useCallback(() => {
+    if (inputRef.current) {
+      const currentWord = words[currentWordIndex];
+      inputRef.current.maxLength = currentWord.length;
+      const value = inputRef.current ? inputRef.current.value.trim() : "";
+      setInputValue(value);
 
-        // Contar letras correctas e incorrectas
-        let correctLetters = 0;
-        let incorrectLetters = 0;
-        for (let i = 0; i < value.length; i++) {
-          if (value[i] === currentWord[i]) {
-            correctLetters++;
-          } else {
-            incorrectLetters++;
-          }
-        }
-        setCorrectCount(correctCount + correctLetters);
-        setIncorrectCount(incorrectCount + incorrectLetters);
-
-        if (value === currentWord) {
-          if (currentWordIndex + 1 === words.length) {
-            // Juego terminado, calcular y mostrar precisión
-            setStartGame(false);
-            const totalTyped = correctCount + incorrectCount;
-            const accuracy =
-              totalTyped === 0 ? 0 : (correctCount / totalTyped) * 100;
-            toast.success("Congratulations!", {
-              description: `You completed the game in ${
-                INITIAL_TIME - currentTime
-              }s with an accuracy of ${accuracy.toFixed(2)}%`,
-            });
-            setCurrentWordIndex(0);
-            if (inputRef.current) inputRef.current.value = "";
-            if (intervalId.current) {
-              clearInterval(intervalId.current);
-            }
-          } else {
-            // Avanzar al siguiente índice
-            setCurrentWordIndex((prevIndex) => prevIndex + 1);
-          }
-          if (inputRef.current) inputRef.current.value = "";
+      // Contar letras correctas e incorrectas
+      let correctLetters = 0;
+      let incorrectLetters = 0;
+      for (let i = 0; i < value.length; i++) {
+        if (value[i] === currentWord[i]) {
+          correctLetters++;
+        } else {
+          incorrectLetters++;
         }
       }
-    },
-    [words, currentWordIndex, currentTime, correctCount, incorrectCount]
-  );
+      setCorrectCount(correctCount + correctLetters);
+      setIncorrectCount(incorrectCount + incorrectLetters);
+
+      if (value === currentWord) {
+        if (currentWordIndex + 1 === words.length) {
+          // Juego terminado, calcular y mostrar precisión
+          setStartGame(false);
+          const totalTyped = correctCount + incorrectCount;
+          const accuracy =
+            totalTyped === 0 ? 0 : (correctCount / totalTyped) * 100;
+          toast.success("Congratulations!", {
+            description: `You completed the game in ${
+              INITIAL_TIME - currentTime
+            }s with an accuracy of ${accuracy.toFixed(2)}%`,
+          });
+          setCurrentWordIndex(0);
+          if (inputRef.current) inputRef.current.value = "";
+          if (intervalId.current) {
+            clearInterval(intervalId.current);
+          }
+        } else {
+          // Avanzar al siguiente índice
+          setCurrentWordIndex((prevIndex) => prevIndex + 1);
+        }
+        if (inputRef.current) inputRef.current.value = "";
+      }
+    }
+  }, [words, currentWordIndex, currentTime, correctCount, incorrectCount]);
 
   // useEffects
   useEffect(() => {

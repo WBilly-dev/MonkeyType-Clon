@@ -3,6 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "./components/ui/button";
 import { Toaster, toast } from "sonner";
+import { Input } from "./components/ui/input";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "./components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+// import retryIcon from "../public/icons/retryIcon";
 
 function App() {
   // Variables Globales
@@ -20,6 +29,8 @@ function App() {
   const timeRef = useRef<HTMLTimeElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const intervalId = useRef<NodeJS.Timeout | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [showChart, setShowChart] = useState<boolean>(false);
 
   // Funciones
   const initGame = useCallback(() => {
@@ -30,10 +41,13 @@ function App() {
     setInputValue("");
     setCorrectCount(0);
     setIncorrectCount(0);
+    setChartData([]);
+    setShowChart(false);
 
     if (intervalId.current) {
       clearInterval(intervalId.current);
     }
+
     intervalId.current = setInterval(() => {
       setCurrentTime((prevTime) => {
         if (prevTime <= 1) {
@@ -46,6 +60,7 @@ function App() {
           toast.error("Time's Up! Game Over", {
             description: `You ran out of time. Your accuracy was ${accuracy}`,
           });
+          setShowChart(true);
           return 0;
         } else {
           return prevTime - 1;
@@ -65,6 +80,7 @@ function App() {
       toast.error("Game Over", { description: "See you soon!" });
       setCurrentTime(0);
       if (inputRef.current) inputRef.current.value = ""; // Limpiar input
+      setShowChart(true);
     }
     setStartGame(!startGame);
   };
@@ -89,6 +105,21 @@ function App() {
       setCorrectCount(correctCount + correctLetters);
       setIncorrectCount(incorrectCount + incorrectLetters);
 
+      setChartData((prevData) => {
+        const newData = [...prevData];
+        if (newData[currentWordIndex]) {
+          newData[currentWordIndex].correctLetters += correctLetters;
+          newData[currentWordIndex].incorrectLetters += incorrectLetters;
+        } else {
+          newData[currentWordIndex] = {
+            word: currentWord,
+            correctLetters,
+            incorrectLetters,
+          };
+        }
+        return newData;
+      });
+
       if (value === currentWord) {
         if (currentWordIndex + 1 === words.length) {
           // Juego terminado, calcular y mostrar precisión
@@ -108,6 +139,7 @@ function App() {
           if (intervalId.current) {
             clearInterval(intervalId.current);
           }
+          setShowChart(true);
         } else {
           // Avanzar al siguiente índice
           setCurrentWordIndex((prevIndex) => prevIndex + 1);
@@ -175,6 +207,23 @@ function App() {
     }
     return "letter";
   };
+
+  // const resetChartsData = () => {
+  //   chartData([]);
+  // };
+
+  //Chart config (Statistics)
+  const chartConfig = {
+    correctLetters: {
+      label: "Corrects",
+      color: "green",
+    },
+    incorrectLetters: {
+      label: "Incorrects",
+      color: "red",
+    },
+  } satisfies ChartConfig;
+
   return (
     <>
       <section
@@ -182,69 +231,109 @@ function App() {
         style={{ fontFamily: "Menlo ,monospace" }}
         className="bg-[#222] gap-8 flex flex-col h-screen  items-center justify-center text-center p-16 "
       >
-        {startGame && (
+        {showChart && (
           <div>
-            <input
-              ref={inputRef}
-              autoFocus={!startGame}
-              placeholder="Type Fast"
-              aria-placeholder="monospace"
-              className="text-center   "
-              type="text"
-            />
+            <div>
+              <ChartContainer
+                config={chartConfig}
+                className="min-h-[200px] w-full"
+              >
+                <BarChart accessibilityLayer data={chartData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="word"
+                    tickLine={false}
+                    tickMargin={15}
+                    axisLine={false}
+                    tickFormatter={(value) => value.slice(0, 10)}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar
+                    dataKey="correctLetters"
+                    fill="var(--color-correctLetters)"
+                    radius={8}
+                  />
+                  <Bar
+                    dataKey="incorrectLetters"
+                    fill="var(--color-incorrectLetters)"
+                    radius={8}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
+            <div>{<Button>Reset</Button>}</div>
           </div>
         )}
         {!startGame && (
           <div>
-            <h1 className="pointer-events-none text-center text-primary text-3xl">
-              Will_Type.Fast<span className="animate-blink">_</span>
-            </h1>
+            <div>
+              <h1 className="pointer-events-none text-center text-primary text-3xl">
+                Will_Type.Fast<span className="animate-blink">_</span>
+              </h1>
+            </div>
           </div>
         )}
 
         <Toaster closeButton richColors position="top-center" />
-        <Button
-          onClick={handleStart}
-          variant="outline"
-          className={`w-60 flex flex-wrap justify-center animate-pulse ${
-            startGame ? "bg-red-500 border-red-500" : "bg-white"
-          }`}
-        >
-          {startGame ? "Terminar Juego" : "Iniciar Juego"}
-        </Button>
-
-        {startGame && (
-          <>
-            <time
-              ref={timeRef}
-              className="text-primary pointer-events-none"
-            ></time>
-            <div className="flex gap-3 " id="text-container">
-              {words.map((word, index) => {
-                const letters = word.split("");
-                return (
-                  <div className="text-wrap break-words ">
-                    <span key={index}>
-                      {letters.map((letter, i) => (
-                        <span
-                          key={i}
-                          id="letter"
-                          className={
-                            index === currentWordIndex
-                              ? getLetterClass(letter, i)
-                              : "letter"
-                          }
-                        >
-                          {letter}
-                        </span>
-                      ))}
-                    </span>
-                  </div>
-                );
-              })}
+        <div>
+          <Button
+            onClick={handleStart}
+            variant="outline"
+            className={`w-60 flex flex-wrap justify-center animate-pulse ${
+              startGame ? "bg-red-500 border-red-500" : "bg-white"
+            }`}
+          >
+            {startGame ? "Terminar Juego" : "Iniciar Juego"}
+          </Button>
+        </div>
+        <div>
+          {startGame && (
+            <div>
+              <Input
+                ref={inputRef}
+                autoFocus={!startGame}
+                placeholder="Type Fast"
+                aria-placeholder="monospace"
+                className="text-center   "
+                type="text"
+              />
             </div>
-          </>
-        )}
+          )}
+        </div>
+        <div>
+          {startGame && (
+            <>
+              <time
+                ref={timeRef}
+                className="text-primary pointer-events-none"
+              ></time>
+              <div className="flex gap-3 " id="text-container">
+                {words.map((word, index) => {
+                  const letters = word.split("");
+                  return (
+                    <div className="text-wrap break-words ">
+                      <span key={index}>
+                        {letters.map((letter, i) => (
+                          <span
+                            key={i}
+                            id="letter"
+                            className={
+                              index === currentWordIndex
+                                ? getLetterClass(letter, i)
+                                : "letter"
+                            }
+                          >
+                            {letter}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </section>
     </>
   );

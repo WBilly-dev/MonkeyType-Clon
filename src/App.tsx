@@ -7,7 +7,8 @@ import { Toaster, toast } from "sonner";
 function App() {
   // Variables Globales
   const INITIAL_TIME = 30;
-  const TEXT = "The quick fox brown jumps over the lazy dog";
+  const TEXT =
+    "The quick fox brown jumps over the lazy dog and i will go tonight to your house to play some monopoly";
 
   const [currentTime, setCurrentTime] = useState<number>(INITIAL_TIME);
   const [startGame, setStartGame] = useState<boolean>(false);
@@ -101,6 +102,8 @@ function App() {
             }s with an accuracy of ${accuracy.toFixed(2)}%`,
           });
           setCurrentWordIndex(0);
+          setCorrectCount(0); // Reiniciar correctCount
+          setIncorrectCount(0); // Reiniciar incorrectCount
           if (inputRef.current) inputRef.current.value = "";
           if (intervalId.current) {
             clearInterval(intervalId.current);
@@ -108,11 +111,21 @@ function App() {
         } else {
           // Avanzar al siguiente índice
           setCurrentWordIndex((prevIndex) => prevIndex + 1);
+          setCorrectCount(0); // Reiniciar correctCount
+          setIncorrectCount(0); // Reiniciar incorrectCount
+          setInputValue(""); // Reiniciar inputValue
         }
         if (inputRef.current) inputRef.current.value = "";
       }
     }
-  }, [words, currentWordIndex, currentTime, correctCount, incorrectCount]);
+  }, [
+    words,
+    currentWordIndex,
+    currentTime,
+    correctCount,
+    incorrectCount,
+    inputValue,
+  ]);
 
   // useEffects
   useEffect(() => {
@@ -148,21 +161,20 @@ function App() {
   }, [startGame]);
 
   const getLetterClass = (letter: string, index: number) => {
-    if (!inputValue) return "letter";
-    const currentWord = words[currentWordIndex];
-    const isCorrect =
-      index < inputValue.length && letter === currentWord[index];
+    // const currentWord = words[currentWordIndex];
+    const isCorrect = index < inputValue.length && letter === inputValue[index];
+    const isIncorrect =
+      index < inputValue.length && letter !== inputValue[index];
     const isActive = index === inputValue.length && startGame;
     if (isCorrect) {
       return "correct";
-    } else if (index < inputValue.length) {
+    } else if (isIncorrect) {
       return "incorrect";
     } else if (isActive) {
       return "active letter";
     }
     return "letter";
   };
-
   return (
     <>
       <section
@@ -175,7 +187,7 @@ function App() {
             <input
               ref={inputRef}
               autoFocus={!startGame}
-              placeholder="Type Play"
+              placeholder="Type Fast"
               aria-placeholder="monospace"
               className="text-center   "
               type="text"
@@ -207,12 +219,12 @@ function App() {
               ref={timeRef}
               className="text-primary pointer-events-none"
             ></time>
-            <div className="flex gap-3 text-white">
+            <div className="flex gap-3 " id="text-container">
               {words.map((word, index) => {
                 const letters = word.split("");
                 return (
-                  <div>
-                    <span key={index} className="word text-wrap break-words">
+                  <div className="text-wrap break-words ">
+                    <span key={index}>
                       {letters.map((letter, i) => (
                         <span
                           key={i}

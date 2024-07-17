@@ -168,15 +168,29 @@ function App() {
       <section
         id="game"
         style={{ fontFamily: "Menlo ,monospace" }}
-        className="bg-[#222] gap-8 flex flex-col h-screen place-content-center items-center justify-center text-center p-16 align-middle"
+        className="bg-[#222] gap-8 flex flex-col h-screen  items-center justify-center text-center p-16 "
       >
+        {startGame && (
+          <div>
+            <input
+              ref={inputRef}
+              autoFocus={!startGame}
+              placeholder="Type Play"
+              aria-placeholder="monospace"
+              className="text-center   "
+              type="text"
+            />
+          </div>
+        )}
         {!startGame && (
-          <h1 className="pointer-events-none text-center text-primary text-3xl">
-            Will_Type.Fast<span className="animate-blink">_</span>
-          </h1>
+          <div>
+            <h1 className="pointer-events-none text-center text-primary text-3xl">
+              Will_Type.Fast<span className="animate-blink">_</span>
+            </h1>
+          </div>
         )}
 
-        <Toaster closeButton richColors position="bottom-center" />
+        <Toaster closeButton richColors position="top-center" />
         <Button
           onClick={handleStart}
           variant="outline"
@@ -197,35 +211,28 @@ function App() {
               {words.map((word, index) => {
                 const letters = word.split("");
                 return (
-                  <span key={index} className="word">
-                    {letters.map((letter, i) => (
-                      <span
-                        key={i}
-                        id="letter"
-                        className={
-                          index === currentWordIndex
-                            ? getLetterClass(letter, i)
-                            : "letter"
-                        }
-                      >
-                        {letter}
-                      </span>
-                    ))}
-                  </span>
+                  <div>
+                    <span key={index} className="word text-wrap break-words">
+                      {letters.map((letter, i) => (
+                        <span
+                          key={i}
+                          id="letter"
+                          className={
+                            index === currentWordIndex
+                              ? getLetterClass(letter, i)
+                              : "letter"
+                          }
+                        >
+                          {letter}
+                        </span>
+                      ))}
+                    </span>
+                  </div>
                 );
               })}
             </div>
           </>
         )}
-
-        <input
-          ref={inputRef}
-          autoFocus={!startGame}
-          placeholder="Type Play"
-          aria-placeholder="monospace"
-          className="text-center mt-20 top-0 left-0 absolute"
-          type="text"
-        />
       </section>
     </>
   );

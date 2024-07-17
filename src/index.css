@@ -14,8 +14,15 @@
   }
 }
 
+#text-container {
+  word-wrap: break-word;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Centrar las palabras */
+}
 #letter {
   color: white;
+  word-wrap: break-word;
   position: relative;
 
   &.active::before {
